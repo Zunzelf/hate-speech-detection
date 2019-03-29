@@ -1,0 +1,7 @@
+*.pyc
+*.docs
+*.docsx
+*.mdl
+*.bin
+*.exe
+*.xlsx
