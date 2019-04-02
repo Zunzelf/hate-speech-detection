@@ -6,3 +6,4 @@
 *.exe
 *.xlsx
 .vscode
+utils/w2v_models/*

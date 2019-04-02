@@ -1,6 +1,6 @@
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-import os,csv, gensim, logging,pickle
+import os, csv, gensim, logging,pickle
 import numpy as np
 
 class Data():
@@ -29,7 +29,7 @@ class Data():
         return token
 
 class TfIdf():
-    def __init__(self,data):
+    def __init__(self, data):
         # belum ditokenisasi ya gapapa
         self.data = data
         self.vectorized = CountVectorizer()
@@ -44,12 +44,12 @@ class TfIdf():
         return X_tfidf
     
 class WordEmbed():
-    def __init__(self,data):
+    def __init__(self, data = None, model = None):
         # data yang sudah ditokenisasi
         self.data = data
-        self.model = None
+        self.model = model
     
-    def get_feature(self,size = 150, window = 10, min_count = 2):
+    def get_feature(self, size = 150, window = 10, min_count = 2):
         # build vocabulary and train model
         model = gensim.models.Word2Vec(
             self.data,
@@ -64,10 +64,10 @@ class WordEmbed():
         self.save_model(self.model)
 
     
-    def sen2vec(self,sentence, words = 20, length = 150, vectors = None):
+    def sen2vec(self, sentence, words = 20, length = 300, vectors = None):
         res = []
         x = 0
-        zeros = np.zeros(150)
+        zeros = np.zeros(length)
         if vectors != None:
             while x < 20 and x < len(sentence):
                 word = sentence[x]
@@ -82,12 +82,15 @@ class WordEmbed():
         res.extend(pad)
         return np.array(res)
 
-    def save_model(self,data):
-        # save to pickle
+    def save_model(self, data, path = 'w2v_model/sen2vec.mdl'):
+        # save as pickle
         print("Save model to file ............................")
-        pickle.dump(data, open('model/sen2vec.mm', 'wb'))
+        pickle.dump(data, open(path, 'wb'))
 
-    def load_model(self):
+    def load_model(self, path = 'w2v_model/sen2vec.mdl'):
         # load from pickle
         print("load model from file .........................")
-        self.model = pickle.load(open('model/sen2vec.mm', 'rb'))
+        self.model = pickle.load(open(path, 'rb'))
+
+    def load_vectors(self, path):
+        self.model = gensim.models.KeyedVectors.load_word2vec_format(path, binary=True)
