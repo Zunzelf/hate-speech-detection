@@ -3,17 +3,19 @@ from nltk.corpus import stopwords
 from nltk import pos_tag
 from autocorrect import spell
 
-def normalize(sent):
-    # stopWords = set(stopwords.words('english'))
-    words = word_tokenize(sent)                 # tokenisasi kata
-    wordsFiltered = []
-
+def prepro(inp, stopword = False):
+    if stopword:
+        stopWords = set(stopwords.words('english'))
+    words = word_tokenize(inp)                 # tokenisasi kata
+    res = []
     for w in words:
-        w = spell (w)                           # word spell correction
-        # if w not in stopWords:                # stop words elimination
-        #     wordsFiltered.append(w)
-        wordsFiltered.append(w)
+        w = spell (w)
+        if stopword:                           # word spell correction
+            if w not in stopWords:                # stop words elimination
+                res.append(w)
+        elif not stopword:
+            res.append(w)
+    return res
 
-    # tag = pos_tag(wordsFiltered)                # POS Tag
-
-    print (wordsFiltered)
+def get_pos(inp):
+    return pos_tag(inp)
