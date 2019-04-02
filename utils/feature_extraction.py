@@ -3,31 +3,6 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import os, csv, gensim, logging,pickle
 import numpy as np
 
-class Data():
-    def __init__(self):
-        self.kelas = [] #for data with class. Training
-        self.docs = [] #for training feature
-        
-    def load_data(self,filename):
-        with open(filename, mode ='r', encoding="utf-8") as csv_file:
-            data = csv.reader(csv_file, delimiter=',')
-            next(csv_file)
-            for line in data:
-                self.docs.append(line[2])
-                self.kelas.append(int(line[1]))
-
-        csv_file.close()
-        print(self.docs[2])
-        # print(self.data[5])
-    
-    def tokenize_doc(self):
-        token = []
-        for line in self.docs:
-            tmp = line.split(" ")
-            token.append(tmp)
-        
-        return token
-
 class TfIdf():
     def __init__(self, data):
         # belum ditokenisasi ya gapapa
