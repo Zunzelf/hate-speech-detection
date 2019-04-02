@@ -36,4 +36,7 @@ if __name__ == "__main__":
     dat = Data()
     dat.load_data('data.csv')
     tkn = dat.tokenize_doc(True)
+    import pickle as pkl
+    with open('token.bin', 'rb') as file:
+        pkl.dump(file, tkn)
     # print(tkn)
