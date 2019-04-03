@@ -29,25 +29,34 @@ def tokenize_doc(docs, prepro = False):
         tokens.append(tmp)
     return tokens
 
+def tokenize_sen(doc): # for parallel process
+    tmp = preprocess.prepro(doc)
+    return tmp
+
 if __name__ == "__main__":
     dat = Data()
     print("loading file...")
     dat.load_data('data.csv')
     print("loading file...complete!")
-
     print("Preparing Parallelism...", end = '')
-    pool = mp.Pool(mp.cpu_count())
-    dats = dat.x
-    print("complete! cpu ready : %s cpus" % mp.cpu_count())
+    pool = mp.Pool(int(mp.cpu_count()/2))
+    # dats = dat.x[0:20000] #1
+    # dats = dat.x[20001:30000] # 2
+    # dats = dat.x[30001:40000]
+    dats = dat.x[40001:50000] # 4
+    # dats = dat.x[50001:-1]
+    print("complete! cpu ready : %i cpus" % int(mp.cpu_count()/2))
 
     print("tokenize docs...")
-    tkn = [pool.apply(tokenize_doc, args = (x, True)) for x in tqdm(dats)]
+    tkn = list(tqdm(pool.imap(tokenize_sen, dats), total = len(dats)))
     pool.close
     print("tokenize docs...complete!")
     
     print("saving tokens...", end = '')
     import pickle as pkl
-    with open('token.bin', 'wb') as file:
+    with open('token-4.bin', 'wb') as file:
         pkl.dump(tkn, file)
     print("complete!")
-    # print(tkn)
+    # with open('token.bin', 'rb') as file:
+    #     tkn = pkl.load(file)
+    print(tkn)

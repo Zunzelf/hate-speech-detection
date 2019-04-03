@@ -34,9 +34,12 @@ if __name__ == '__main__':
     # print(model.predict_classes(inp, batch_size = 1, verbose = 1))
 
     import os
+    import pickle as pkl
     # Load Google's pre-trained Word2Vec model.
     path = os.path.join('utils', 'w2v_models', 'GoogleNews-vectors-negative300.bin')
     model =  w2v()
+    print("Loading...")
     model.load_vectors(path)
+    print("get vector...")
     print(model.model['i'])
-    print(model.model.most_similiar(positive = "i"))
+    print(model.model.most_similar(positive = "i"))
