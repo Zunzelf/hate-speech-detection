@@ -2,14 +2,19 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk import pos_tag
 from autocorrect import spell
+from spellchecker import SpellChecker
 
 
 def prepro(inp):
-    words = word_tokenize(inp)                 # tokenisasi kata
+    words = word_tokenize(inp)                 # tokenisasi kata   
+    spell = SpellChecker()
+
     res = []
-    for w in words:
-        w = spell (w)
-        res.append(w)
+    for x in words:
+        word = x
+        if spell.unknown([x]):
+            word = spell.correction(x)
+        res.append(word)
     return res
 
 def get_pos(inp):
