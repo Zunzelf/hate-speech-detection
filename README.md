@@ -16,6 +16,7 @@ In this project, vector model that we use is **word2vec** model from gensim, we 
 ### Generate-Dataset
 To generate the dataset you need to run `dataset.py` by using :
 > cd **utils**
+>
 > py **<span>dataset.py</span>**
 
 Then the data will be ready in the `utils` folder (and as we said earlier, we like to call it token-vectorized thus we named it the same~).
