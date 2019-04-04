@@ -20,7 +20,7 @@ if __name__ == '__main__':
     targets = np_utils.to_categorical(targets, num_classes = num_target)
 
     model = nn.keras_model(datas, targets, nb_classes=num_target, hidden_units = 50)
-    model.fit(datas, targets, batch_size = 300, epochs=10, verbose=1, metrics = ['mse', 'accuracy'])
+    model.fit(datas, targets, batch_size = 300, epochs=10, verbose=1)
     import pickle as pkl
     with open("beta-2.mdl", 'wb') as file:
         pkl.dump(model, file)

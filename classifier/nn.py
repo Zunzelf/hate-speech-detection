@@ -10,7 +10,7 @@ def keras_model(X_train, Y_train, nb_classes, X_test = None, Y_test = None, hidd
 	model.add(Dense(nb_classes))
 	model.add(Activation('softmax'))
 	rmsprop = RMSprop(clipnorm = 5.0)
-	model.compile(loss='categorical_crossentropy', optimizer=rmsprop)
+	model.compile(loss='categorical_crossentropy', optimizer=rmsprop, metrics = ['mse', 'accuracy'])
 	return model
 
 def train_model(model, X_train, Y_train, X_test = None, Y_test = None, epochs = 100, batch_size = 10, save_model = False):
