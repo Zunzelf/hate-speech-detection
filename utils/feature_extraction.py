@@ -19,27 +19,22 @@ class TfIdf():
         return X_tfidf
     
 class WordEmbed():
-    def __init__(self, data = None, model = None):
-        # data yang sudah ditokenisasi
-        self.data = data
-        self.model = model
-    
-    def get_feature(self, size = 150, window = 10, min_count = 2):
+    def get_feature(self, inp, vectors = None):
         # build vocabulary and train model
-        model = gensim.models.Word2Vec(
-            self.data,
-            size=size,
-            window=window,
-            min_count=min_count,
-            workers=10)
-        model.train(self.data, total_examples=len(self.data), epochs=10)
-        docs = np.array([self.sen2vec(x, vectors = model) for x in self.data])
-        self.model = docs.reshape(docs.shape[0], -1, 1)
-        # save to file
-        self.save_model(self.model)
+        return vectors[inp]
 
+    def create_model(self, datas, size = 150, window = 10, min_count = 2):
+        model = gensim.models.Word2Vec(
+            datas,
+            size = size,
+            window = window,
+            min_count = min_count,
+            workers=10)
+        model.train(datas, total_examples=len(datas), epochs=100)
+        return model
+        
     
-    def sen2vec(self, sentence, words = 20, length = 300, vectors = None):
+    def sen2vec(self, sentence, words = 20, length = 150, vectors = None):
         res = []
         x = 0
         zeros = np.zeros(length)
@@ -47,7 +42,7 @@ class WordEmbed():
             while x < 20 and x < len(sentence):
                 word = sentence[x]
                 try:
-                    vector = vectors[word]
+                    vector = self.get_feature(word, vectors)
                 except KeyError:
                     vector = zeros
                 res.append(vector)
@@ -57,15 +52,29 @@ class WordEmbed():
         res.extend(pad)
         return np.array(res)
 
-    def save_model(self, data, path = 'w2v_model/sen2vec.mdl'):
+    def save_model(self, model, path = 'sen2vec.mdl'):
         # save as pickle
         print("Save model to file ............................")
-        pickle.dump(data, open(path, 'wb'))
+        pickle.dump(model, open(path, 'wb'))
 
-    def load_model(self, path = 'w2v_model/sen2vec.mdl'):
+    def load_model(self, path = 'sen2vec.mdl'):
         # load from pickle
         print("load model from file .........................")
-        self.model = pickle.load(open(path, 'rb'))
+        return pickle.load(open(path, 'rb'))
 
     def load_vectors(self, path):
         self.model = gensim.models.KeyedVectors.load_word2vec_format(path, binary=True)
+
+if __name__ == "__main__":
+    '''
+    docs = np.array([self.sen2vec(x, vectors = model) for x in self.data])
+        self.model = docs.reshape(docs.shape[0], -1, 1)
+        # save to file
+        self.save_model(self.model)
+    '''
+    import pickle as pkl
+    with open('token-checked.bin', 'rb') as file:
+        dats = pkl.load(file)
+    w2v = WordEmbed()
+    model = w2v.create_model(dats)
+    w2v.save_model(model)

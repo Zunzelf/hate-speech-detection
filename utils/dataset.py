@@ -1,7 +1,9 @@
 import os, csv
-import preprocess
+from utils import preprocess
+from utils.feature_extraction import WordEmbed as w2v
 import multiprocessing as mp
 from tqdm import tqdm
+import numpy as np
 # import nltk
 # nltk.download('punkt')
 
@@ -30,33 +32,43 @@ def tokenize_doc(docs, prepro = False):
     return tokens
 
 def tokenize_sen(doc): # for parallel process
-    tmp = preprocess.prepro(doc)
+    tmp = preprocess.tweet_prepro(doc)
     return tmp
 
 if __name__ == "__main__":
     dat = Data()
+
     print("loading file...")
     dat.load_data('data.csv')
     print("loading file...complete!")
+
     print("Preparing Parallelism...", end = '')
-    pool = mp.Pool(int(mp.cpu_count()/2))
-    # dats = dat.x[0:20000] #1
-    # dats = dat.x[20001:30000] # 2
-    # dats = dat.x[30001:40000]
-    dats = dat.x[40001:50000] # 4
-    # dats = dat.x[50001:-1]
-    print("complete! cpu ready : %i cpus" % int(mp.cpu_count()/2))
+    pool = mp.Pool(int(mp.cpu_count()))
+    dats = dat.x
+    print("complete! cpu ready : %i cpus" % int(mp.cpu_count()))
 
     print("tokenize docs...")
     tkn = list(tqdm(pool.imap(tokenize_sen, dats), total = len(dats)))
     pool.close
     print("tokenize docs...complete!")
-    
-    print("saving tokens...", end = '')
+
+    print("spell checking tokens...")    
+    res = list(tqdm(pool.imap(preprocess.spell_check, tkn), total = len(tkn)))
+    pool.close
+    print("spell checking tokens...complete!")
+
     import pickle as pkl
-    with open('token-4.bin', 'wb') as file:
-        pkl.dump(tkn, file)
-    print("complete!")
-    # with open('token.bin', 'rb') as file:
-    #     tkn = pkl.load(file)
-    print(tkn)
+
+    word2v = w2v()
+    model =  word2v.load_model()
+    vectorized = []
+    for dat in tqdm(dats):
+        vectorized.append(word2v.sen2vec(dats[0], vectors = model))
+
+    vectorized = np.array(vectorized)
+    vectorized = vectorized.reshape(vectorized.shape[0], -1, 1)  
+
+    print(vectorized.shape)
+    with open('token-vectorized.bin', 'wb') as file:
+        pkl.dump(vectorized, file)
+
