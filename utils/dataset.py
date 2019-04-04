@@ -1,6 +1,10 @@
 import os, csv
-from utils import preprocess
-from utils.feature_extraction import WordEmbed as w2v
+try :
+    from utils import preprocess
+    from utils.feature_extraction import WordEmbed as w2v
+except ModuleNotFoundError:
+    import preprocess
+    from feature_extraction import WordEmbed as w2v
 import multiprocessing as mp
 from tqdm import tqdm
 import numpy as np
@@ -9,7 +13,7 @@ import numpy as np
 
 class Data():
     def __init__(self):
-        self.y = []    #   for data with class. Training
+        self.y = []      #   for data with class. Training
         self.x = []      #   for training feature
         
     def load_data(self, path):
@@ -39,7 +43,7 @@ if __name__ == "__main__":
     dat = Data()
 
     print("loading file...")
-    dat.load_data('data.csv')
+    dat.load_data('labeled_data.csv')
     print("loading file...complete!")
 
     print("Preparing Parallelism...", end = '')
@@ -52,7 +56,8 @@ if __name__ == "__main__":
     pool.close
     print("tokenize docs...complete!")
 
-    print("spell checking tokens...")    
+    print("spell checking tokens...")
+    pool = mp.Pool(int(mp.cpu_count()))    
     res = list(tqdm(pool.imap(preprocess.spell_check, tkn), total = len(tkn)))
     pool.close
     print("spell checking tokens...complete!")
