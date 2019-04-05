@@ -68,7 +68,7 @@ if __name__ == "__main__":
         model =  word2v.load_model()
         vectorized = []
         for dat in tqdm(res):
-            vectorized.append(word2v.sen2vec(dats, vectors = model))
+            vectorized.append(word2v.sen2vec(dat, vectors = model))
 
         vectorized = np.array(vectorized)
         vectorized = vectorized.reshape(vectorized.shape[0], -1, 1)  
@@ -77,5 +77,8 @@ if __name__ == "__main__":
         with open('token-vectorized.bin', 'wb') as file:
             pkl.dump(vectorized, file)
     except FileNotFoundError:
-        with open('token-checked.bin', 'wb') as file:
-            pkl.dump(res, file)
+        try:
+            with open('token-checked.bin', 'wb') as file:
+                pkl.dump(res, file)
+        except NameError:
+            print("please add word vector model")
