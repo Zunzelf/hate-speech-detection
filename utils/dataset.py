@@ -41,39 +41,44 @@ def tokenize_sen(doc): # for parallel process
 
 if __name__ == "__main__":
     dat = Data()
+    if not os.path.exists("token-checked.bin"):
+        print("loading file...")
+        dat.load_data('labeled_data.csv')
+        print("loading file...complete!")
 
-    print("loading file...")
-    dat.load_data('labeled_data.csv')
-    print("loading file...complete!")
+        print("Preparing Parallelism...", end = '')
+        pool = mp.Pool(int(mp.cpu_count()))
+        dats = dat.x
+        print("complete! cpu ready : %i cpus" % int(mp.cpu_count()))
 
-    print("Preparing Parallelism...", end = '')
-    pool = mp.Pool(int(mp.cpu_count()))
-    dats = dat.x
-    print("complete! cpu ready : %i cpus" % int(mp.cpu_count()))
+        print("tokenize docs...")
+        tkn = list(tqdm(pool.imap(tokenize_sen, dats), total = len(dats)))
+        pool.close
+        print("tokenize docs...complete!")
 
-    print("tokenize docs...")
-    tkn = list(tqdm(pool.imap(tokenize_sen, dats), total = len(dats)))
-    pool.close
-    print("tokenize docs...complete!")
-
-    print("spell checking tokens...")
-    pool = mp.Pool(int(mp.cpu_count()))    
-    res = list(tqdm(pool.imap(preprocess.spell_check, tkn), total = len(tkn)))
-    pool.close
-    print("spell checking tokens...complete!")
+        print("spell checking tokens...")
+        pool = mp.Pool(int(mp.cpu_count()))    
+        res = list(tqdm(pool.imap(preprocess.spell_check, tkn), total = len(tkn)))
+        pool.close
+        print("spell checking tokens...complete!")
 
     import pickle as pkl
+    try :
+        word2v = w2v()
+        model =  word2v.load_model()
+        vectorized = []
+        for dat in tqdm(res):
+            vectorized.append(word2v.sen2vec(dat, vectors = model))
 
-    word2v = w2v()
-    model =  word2v.load_model()
-    vectorized = []
-    for dat in tqdm(dats):
-        vectorized.append(word2v.sen2vec(dats[0], vectors = model))
+        vectorized = np.array(vectorized)
+        vectorized = vectorized.reshape(vectorized.shape[0], -1, 1)  
 
-    vectorized = np.array(vectorized)
-    vectorized = vectorized.reshape(vectorized.shape[0], -1, 1)  
-
-    print(vectorized.shape)
-    with open('token-vectorized.bin', 'wb') as file:
-        pkl.dump(vectorized, file)
-
+        print(vectorized.shape)
+        with open('token-vectorized.bin', 'wb') as file:
+            pkl.dump(vectorized, file)
+    except FileNotFoundError:
+        try:
+            with open('token-checked.bin', 'wb') as file:
+                pkl.dump(res, file)
+        except NameError:
+            print("please add word vector model")
