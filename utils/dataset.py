@@ -40,8 +40,12 @@ def tokenize_sen(doc): # for parallel process
     return tmp
 
 if __name__ == "__main__":
+    import pickle as pkl
     dat = Data()
-    if not os.path.exists("token-checked.bin"):
+    if os.path.exists("token-checked.bin"):
+        with open('token-checked.bin', 'rb') as file:
+            res = pkl.load(file)
+    elif not os.path.exists("token-checked.bin"):
         print("loading file...")
         dat.load_data('labeled_data.csv')
         print("loading file...complete!")
@@ -61,8 +65,9 @@ if __name__ == "__main__":
         res = list(tqdm(pool.imap(preprocess.spell_check, tkn), total = len(tkn)))
         pool.close
         print("spell checking tokens...complete!")
+        with open('token-checked.bin', 'wb') as file:
+            pkl.dump(res, file)
 
-    import pickle as pkl
     try :
         word2v = w2v()
         model =  word2v.load_model()
@@ -71,14 +76,11 @@ if __name__ == "__main__":
             vectorized.append(word2v.sen2vec(dat, vectors = model))
 
         vectorized = np.array(vectorized)
-        vectorized = vectorized.reshape(vectorized.shape[0], -1, 1)  
-
         print(vectorized.shape)
+        # vectorized = vectorized.reshape(vectorized.shape[0], -1, 1)  
+
+        # print(vectorized.shape)
         with open('token-vectorized.bin', 'wb') as file:
             pkl.dump(vectorized, file)
     except FileNotFoundError:
-        try:
-            with open('token-checked.bin', 'wb') as file:
-                pkl.dump(res, file)
-        except NameError:
-            print("please add word vector model")
+        print("please add word vector model")

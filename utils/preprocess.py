@@ -24,3 +24,8 @@ def tweet_prepro(inp):
 
 def get_pos(inp):
     return pos_tag(inp)
+
+def clean(inp):
+    res = tweet_prepro(inp)
+    res = spell_check(res)
+    return res

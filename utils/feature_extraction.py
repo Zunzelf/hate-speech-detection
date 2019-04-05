@@ -3,6 +3,13 @@ from sklearn.feature_extraction.text import TfidfTransformer
 import os, csv, gensim, logging,pickle
 import numpy as np
 
+    
+def word2idx(word, word_model):
+    try :
+        return word_model.wv.vocab[word].index
+    except KeyError :
+        return word_model.wv.vocab['$$'].index
+
 class TfIdf():
     def __init__(self, data):
         # belum ditokenisasi ya gapapa
@@ -23,7 +30,8 @@ class WordEmbed():
         # build vocabulary and train model
         return vectors[inp]
 
-    def create_model(self, datas, size = 150, window = 10, min_count = 2):
+    def create_model(self, datas, size = 100, window = 5, min_count = 2):
+        print(type(datas))
         model = gensim.models.Word2Vec(
             datas,
             size = size,
@@ -34,12 +42,12 @@ class WordEmbed():
         return model
         
     
-    def sen2vec(self, sentence, words = 20, length = 150, vectors = None):
+    def sen2vec(self, sentence, words = 10, length = 100, vectors = None):
         res = []
         x = 0
         zeros = np.zeros(length)
         if vectors != None:
-            while x < 20 and x < len(sentence):
+            while x < words and x < len(sentence):
                 word = sentence[x]
                 try:
                     vector = self.get_feature(word, vectors)
@@ -51,6 +59,12 @@ class WordEmbed():
         pad =  [zeros] * gap
         res.extend(pad)
         return np.array(res)
+
+    def sen2vec_2(self, sentence, word_model):
+        test = np.zeros([1, 20], dtype=np.int32)
+        for t, word in enumerate(sentence):
+            test[0, t] = word2idx(word, word_model)
+        return test
 
     def save_model(self, model, path = 'sen2vec.mdl'):
         # save as pickle
@@ -66,11 +80,13 @@ class WordEmbed():
         return gensim.models.KeyedVectors.load_word2vec_format(path, binary=True)
 
 if __name__ == "__main__":
-    # import pickle as pkl
-    # with open('token-checked.bin', 'rb') as file:
-    #     dats = pkl.load(file)
     w2v = WordEmbed()
-    # model = w2v.create_model(dats)
-    # w2v.save_model(model)
-    model = w2v.load_vectors("GoogleNews-vectors.bin")
+    import pickle as pkl
+    with open('token-checked.bin', 'rb') as file:
+        dats = pkl.load(file)
+    print('>>>>', type(dats[0]))
+    dats.extend([['$$'], ['$$']])
+    model = w2v.create_model(dats)
+    w2v.save_model(model)
+    # model = w2v.load_vectors("GoogleNews-vectors.bin")
     print(model['i'])
