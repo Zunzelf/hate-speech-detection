@@ -63,18 +63,14 @@ class WordEmbed():
         return pickle.load(open(path, 'rb'))
 
     def load_vectors(self, path):
-        self.model = gensim.models.KeyedVectors.load_word2vec_format(path, binary=True)
+        return gensim.models.KeyedVectors.load_word2vec_format(path, binary=True)
 
 if __name__ == "__main__":
-    '''
-    docs = np.array([self.sen2vec(x, vectors = model) for x in self.data])
-        self.model = docs.reshape(docs.shape[0], -1, 1)
-        # save to file
-        self.save_model(self.model)
-    '''
-    import pickle as pkl
-    with open('token-checked.bin', 'rb') as file:
-        dats = pkl.load(file)
+    # import pickle as pkl
+    # with open('token-checked.bin', 'rb') as file:
+    #     dats = pkl.load(file)
     w2v = WordEmbed()
-    model = w2v.create_model(dats)
-    w2v.save_model(model)
+    # model = w2v.create_model(dats)
+    # w2v.save_model(model)
+    model = w2v.load_vectors("GoogleNews-vectors.bin")
+    print(model['i'])
