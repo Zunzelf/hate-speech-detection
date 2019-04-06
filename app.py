@@ -38,5 +38,4 @@ def classify():
 
 if __name__ == '__main__':
 
-    app.run()
-    # print(clssfr.predict('i i i i'))        
+    app.run()      
