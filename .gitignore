@@ -8,3 +8,5 @@
 .vscode
 utils/w2v_models/*
 __pycache__
+*.zip
+*.rar
