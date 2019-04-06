@@ -25,16 +25,23 @@ def index():
 @app.route("/classify", methods=["GET","POST"])
 def classify():
     pred = ''
+    txt = ""
     check = True
     if request.method == "POST":
         txt = request.form["inference"]
         print("input: ",txt)
         print("type: ",type(txt))
         pred = clsfr.predict(txt)
-        if not pred:
+        if pred == '':
             check = False
+        elif pred == 0:
+            pred = "kebencian"
+        elif pred == 1:
+            pred = "ofensif"
+        elif pred == 2:
+            pred = "netral"
         print(txt, '--->', pred)
-    return render_template("classify.html",txt = pred, check = check)
+    return render_template("classify.html",txt = txt, pred = pred, check = check)
 
 if __name__ == '__main__':
 

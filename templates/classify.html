@@ -1,22 +1,29 @@
 {%extends 'layout.html'%}
 {%block body%}
-<form  method="POST" action="">
-    <div class="form-group">
-        <label for="inference">Input your text here</label>
-        <input type="text" class="form-control" name="inference" id="inference" aria-describedby="emailHelp" placeholder="Enter text to classify">
-    </div>
-    {% if not check%}
-        <p id="error" style="color: red">Input mustn't empty</p>
-    {%endif%}
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-<div id="result-area">
-    <center>
-        <h1>Hasil Klasifikasi</h1>
-        <hr>
-    </center>
-    <div id="result-text">
-        <p style="text-align: center">{{txt}}</p>
-    </div>
+<div>
+    <form  method="POST" action="">
+        <div class="form-group">
+            <label for="inference">Input your text here (English Languange Only)</label>
+            <input type="text" class="form-control" name="inference" id="inference" aria-describedby="emailHelp" placeholder="Enter text to classify">
+        </div>
+        {% if not check%}
+            <p id="error" style="color: red">Input mustn't empty</p>
+        {%endif%}
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
 </div>
+<div class="jumbotron jumbotron-fluid" style="margin-top: 20pt">
+    <div class="container">
+        <center>
+            <h1>Hasil Klasifikasi</h1>
+        </center>
+        {% if txt == ""%}
+            <p class="lead" style="text-align: center">Anda Belum Memasukkan Kalimat Untuk Diklasifikasi</p>
+        {% else %}
+            <p class="lead" style="text-align: center">Kalimat: {{txt}}</p>
+            <hr class="my-4">
+            <p style="text-align: center">Merupakan kalimat <b>{{pred}}</b> berdasarkan hasil klasifikasi</p>
+        {%endif%}
+    </div>
+  </div>
 {%endblock%}
