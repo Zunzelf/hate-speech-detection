@@ -8,8 +8,6 @@ except ModuleNotFoundError:
 import multiprocessing as mp
 from tqdm import tqdm
 import numpy as np
-# import nltk
-# nltk.download('punkt')
 
 class Data():
     def __init__(self):
