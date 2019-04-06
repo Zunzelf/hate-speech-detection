@@ -4,7 +4,7 @@ from autocorrect import spell
 import re
 import preprocessor as p
 
-symbols = ['!', '@', '&', '#', '?', '...', '$', ':', ';', 'amp', '.', 'RT', ',']
+symbols = ['!', '@', '&', '#', '?', '...', '$', ':', ';', 'amp', '.', 'RT', ',', '""', "''", "``"]
 p.set_options(p.OPT.URL, p.OPT.EMOJI, p.OPT.SMILEY)
 def spell_check(inp):
     res = []

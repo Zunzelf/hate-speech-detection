@@ -10,6 +10,9 @@ def word2idx(word, word_model):
     except KeyError :
         return word_model.wv.vocab['$$'].index
 
+def idx2word(idx, word_model):
+    return word_model.wv.index2word[idx]
+
 class TfIdf():
     def __init__(self, data):
         # belum ditokenisasi ya gapapa
@@ -31,16 +34,14 @@ class WordEmbed():
         return vectors[inp]
 
     def create_model(self, datas, size = 100, window = 5, min_count = 2):
-        print(type(datas))
         model = gensim.models.Word2Vec(
             datas,
             size = size,
             window = window,
             min_count = min_count,
             workers=10)
-        model.train(datas, total_examples=len(datas), epochs=100)
-        return model
-        
+        model.train(datas, total_examples = len(datas), epochs=100)
+        return model     
     
     def sen2vec(self, sentence, words = 10, length = 100, vectors = None):
         res = []
@@ -68,12 +69,12 @@ class WordEmbed():
 
     def save_model(self, model, path = 'sen2vec.mdl'):
         # save as pickle
-        print("Save model to file ............................")
+        print("Save model to file...")
         pickle.dump(model, open(path, 'wb'))
 
     def load_model(self, path = 'sen2vec.mdl'):
         # load from pickle
-        print("load model from file .........................")
+        print("load model from file...")
         return pickle.load(open(path, 'rb'))
 
     def load_vectors(self, path):

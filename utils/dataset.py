@@ -25,15 +25,15 @@ class Data():
                 self.y.append(int(line[1]))
             csv_file.close()
     
-# def tokenize_doc(docs, prepro = False):
-#     tokens = []
-#     for line in docs:
-#         if prepro:
-#             tmp = preprocess.prepro(line)
-#         elif not prepro:
-#             tmp = line.split(" ")
-#         tokens.append(tmp)
-#     return tokens
+def tokenize_doc(docs, prepro = False):
+    tokens = []
+    for line in docs:
+        if prepro:
+            tmp = preprocess.tweet_prepro(line)
+        elif not prepro:
+            tmp = line.split(" ")
+        tokens.append(tmp)
+    return tokens
 
 def tokenize_sen(doc): # for parallel process
     tmp = preprocess.tweet_prepro(doc)

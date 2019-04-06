@@ -1,8 +1,6 @@
-from classifier import nn
-from classifier.nn import Driver
-import numpy as np
+# from classifier import nn
+from classifier.driver import driver
 # from utils.dataset import Data
-from keras.utils import np_utils
 import os
 
 
@@ -10,11 +8,13 @@ from flask import Flask, request, render_template
 
 app = Flask(__name__)
 
-clsfr = Driver()
-# load classifier model
-clsfr.load_model('models/beta-3.mdl')
+clsfr = driver()
 # load classifier model
 clsfr.load_word_model('models/sen2vec.mdl')
+# load classifier model
+clsfr.load_model('models/beta-3.mdl')
+
+
 
 @app.route("/")
 def index():
@@ -22,6 +22,7 @@ def index():
 
 @app.route("/classify", methods=["GET","POST"])
 def classify():
+    print(type(clsfr.model))
     pred = text = ''
     check = True
     if request.method == "POST":
