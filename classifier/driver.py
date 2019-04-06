@@ -106,7 +106,7 @@ class driver():
         
         return res
 
-    def generate_models(self, data_path, save_path, w2v_path = None, test = 0.3, spell_check = True, evaluate = True, epochs = 100):
+    def generate_models(self, data_path, save_path, w2v = None, test = 0.3, spell_check = True, evaluate = True, epochs = 100):
         dat = Data()
         print("loading file...")
         dat.load_data(data_path)
@@ -138,3 +138,9 @@ class driver():
                 
             score = f1_score(orig, preds, average = 'micro')   
             print(score)
+        
+if __name__ == "__main__":
+    data = os.path.join("..", 'utils', 'labelled_data.csv')
+    print(type(data))
+    
+    

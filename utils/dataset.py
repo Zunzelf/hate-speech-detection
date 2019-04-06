@@ -8,8 +8,6 @@ except ModuleNotFoundError:
 import multiprocessing as mp
 from tqdm import tqdm
 import numpy as np
-# import nltk
-# nltk.download('punkt')
 
 class Data():
     def __init__(self):
@@ -29,7 +27,7 @@ def tokenize_doc(docs, prepro = False):
     tokens = []
     for line in docs:
         if prepro:
-            tmp = preprocess.tweet_prepro(line)
+            tmp = preprocess.prepro(line)
         elif not prepro:
             tmp = line.split(" ")
         tokens.append(tmp)
