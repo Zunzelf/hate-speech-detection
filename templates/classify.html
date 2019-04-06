@@ -1,0 +1,22 @@
+{%extends 'layout.html'%}
+{%block body%}
+<form  method="POST" action="">
+    <div class="form-group">
+        <label for="inference">Input your text here</label>
+        <input type="text" class="form-control" name="inference" id="inference" aria-describedby="emailHelp" placeholder="Enter text to classify">
+    </div>
+    {% if not check%}
+        <p id="error" style="color: red">Input mustn't empty</p>
+    {%endif%}
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+<div id="result-area">
+    <center>
+        <h1>Hasil Klasifikasi</h1>
+        <hr>
+    </center>
+    <div id="result-text">
+        <p style="text-align: center">{{txt}}</p>
+    </div>
+</div>
+{%endblock%}

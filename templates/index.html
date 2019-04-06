@@ -1,0 +1,44 @@
+{%extends 'layout.html'%}
+{%block body%}
+<h1>What is this?</h1>
+<p>
+    This project is a task to fullfill NLP college project, which is identifying hate speech from text(mostly from tweet)
+</p>
+<p>
+    The data we use in this repository is from t - davidson with formatted such as :
+    <ul>
+        <li>
+            class: 0 - hate speech, 1 - offensive languange, 2 - neither
+        </li>
+        <li>Tweet: tweet/text</li>
+    </ul>
+</p>
+<p>For further reference kindly visit <a href="https://github.com/Zunzelf/hate-speech-detection">our repository on github</a></p>
+<center>
+    <h1>Our Team</h1><hr>
+</center>
+<div class="card-deck">
+        <div class="card">
+          <!-- <img class="card-img-top" src="..." alt="Card image cap"> -->
+          <div class="card-body">
+            <h5 class="card-title">Andreas Novian </h5>
+            <p class="card-text">NIM: 23518002<br><hr>Focusing on data preprocessing. Cleaning data from stop-word, URL, and emoticon, also tokenizing data for word embedding</p>
+          </div>
+        </div>
+        <div class="card">
+          <!-- <img class="card-img-top" src="..." alt="Card image cap"> -->
+          <div class="card-body">
+            <h5 class="card-title">Muhammad Fikri Hasani</h5>
+            <p class="card-text">NIM: 23518014<br><hr>Focusing in Feature Extraction. Uses word embedding and further implement in the sentence level.</p>
+          </div>
+
+        </div>
+        <div class="card">
+          <!-- <img class="card-img-top" src="..." alt="Card image cap"> -->
+          <div class="card-body">
+            <h5 class="card-title">Teza</h5>
+            <p class="card-text">NIM: 235180xx<br><hr>Focusing on classifier implementation. Uses LSTM (Deep Neural Network)</p>
+          </div>
+        </div>
+      </div>
+{%endblock%}
