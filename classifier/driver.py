@@ -1,20 +1,30 @@
 import os, sys
-stderr = sys.stderr
-sys.stderr = open(os.devnull, 'w')
-from utils.feature_extraction import WordEmbed
-from utils.feature_extraction import word2idx, idx2word    
-from utils.dataset import Data, tokenize_doc, tokenize_sen
-from classifier.nn import BiLSTM
-from tqdm import tqdm
-import numpy as np
-from utils.dataset import Data
-from keras.utils import np_utils
+# stderr = sys.stderr
+# sys.stderr = open(os.devnull, 'w')
+try:
+    from utils.feature_extraction import WordEmbed
+    from utils.feature_extraction import word2idx, idx2word    
+    from utils.dataset import Data, tokenize_doc, tokenize_sen
+    from classifier.nn import BiLSTM
+    from utils.dataset import Data
+    from keras.utils import np_utils
+except ModuleNotFoundError:
+    sys.path.append('..')
+    from utils.feature_extraction import WordEmbed
+    from utils.feature_extraction import word2idx, idx2word    
+    from utils.dataset import Data, tokenize_doc, tokenize_sen
+    from classifier.nn import BiLSTM
+    from utils.dataset import Data
+    from keras.utils import np_utils
+
 from utils import preprocess as prepro
 import pickle as pkl
+from tqdm import tqdm
+import numpy as np
 import multiprocessing as mp
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split as tts
-sys.stderr = stderr
+# sys.stderr = stderr
 dats = Data()
 
 class driver():
@@ -37,7 +47,7 @@ class driver():
         res = self.model.predict_classes(test)
         return res[0]
 
-    def train_model(self, X, Y, X_test = None, Y_test = None, save_path = 'model_classifier.mdl', epochs = 100):        
+    def train_model(self, X, Y, X_test = None, Y_test = None, save_path = 'model_classifier.mdl', epochs = 100, model):        
         pretrained_weights = self.word_model.wv.syn0
         datas = X
         targets = Y
@@ -106,23 +116,32 @@ class driver():
         
         return res
 
-    def generate_models(self, data_path, save_path, w2v = None, test = 0.3, spell_check = True, evaluate = True, epochs = 100):
-        dat = Data()
-        print("loading file...")
-        dat.load_data(data_path)
-        print("loading file...complete!")
-        cleaned_data = self.clean_dataset(dat, spell_check = spell_check)
-        train_x, test_x, train_y, test_y = tts(cleaned_data, dat.y, test_size = test)
+    def generate_models(self, data, save_path, w2v = None, test = 0.3, spell_check = True, evaluate = True, epochs = 100, model = 'bi'):
+        if type(data) == str:
+            dat = Data()
+            print("loading file...")
+            dat.load_data(data)
+            print("loading file...complete!")
+            cleaned_data = self.clean_dataset(dat, spell_check = spell_check)
+            targets = dat.y
+        elif type(data) != str:
+            cleaned_data = data[0]
+            targets = data[1]
         
-        if w2v_path == None:
+        train_x, test_x, train_y, test_y = tts(cleaned_data, targets, test_size = test)
+        
+        if w2v == None:
             self.train_word_model(cleaned_data, save_path = 'generated_word_model.mdl')
             print('Processed : %i vocabs'% len(self.word_model.wv.vocab))
-        
-        # freed some memory
-        del cleaned_data
-        del dat
+        elif type(w2v) == str:
+            self.load_word_model(w2v)
 
-        self.train_model(train_x, train_y, test_x, test_y, save_path = save_path, epochs = epochs)
+        if type(data) == str:
+            # freed some memory
+            del cleaned_data
+            del dat
+
+        self.train_model(train_x, train_y, test_x, test_y, save_path = save_path, epochs = epochs, model = model)
         if evaluate:
             self.evaluate(test_x, test_y)
 
@@ -134,13 +153,28 @@ class driver():
                 txts = " ".join(test_x[x])
                 preds.append(self.predict(txts))
                 # just for checking accuracy
-                orig.append(test_y[x])
-                
+                orig.append(test_y[x])       
             score = f1_score(orig, preds, average = 'micro')   
             print(score)
         
 if __name__ == "__main__":
-    data = os.path.join("..", 'utils', 'labelled_data.csv')
-    print(type(data))
-    
-    
+    data_path = os.path.join("..", 'models', 'token-checked-2.bin')
+    w2v_path = os.path.join("..", 'models', 'glove-twitter-100.txt')
+    with open(data_path, 'rb') as file:
+        data = pkl.load(file)
+    # w2v = WordEmbed()
+    # model = w2v.load_vectors(w2v_path, False)
+    # # convert the wv word vectors into a numpy matrix that is suitable for insertion
+    # # into our TensorFlow and Keras models
+    # embedding_matrix = np.zeros((len(model.wv.vocab), 100))
+    # for i in tqdm(range(len(model.wv.vocab))):
+    #     embedding_vector = model.wv[model.wv.index2word[i]]
+    #     if embedding_vector is not None:
+    #         embedding_matrix[i] = embedding_vector
+    # print(embedding_matrix)
+    drv = driver()
+    drv.load_word_model(os.path.join('..', 'models', 'sen2vec.mdl'))
+    trgt = Data()
+    trgt.load_data(os.path.join('..', 'utils', 'labeled_data.csv'))
+    trgt = trgt.y
+    drv.generate_models([data, trgt], 'generated_model.mdl', os.path.join('..', 'models', 'sen2vec.mdl'))
