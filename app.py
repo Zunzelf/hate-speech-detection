@@ -1,5 +1,6 @@
 # from classifier import nn
 from classifier.driver import driver
+from utils.feature_extraction import WordEmbed
 # from utils.dataset import Data
 import os
 
@@ -8,15 +9,7 @@ from flask import Flask, request, render_template
 import tensorflow as tf
 
 app = Flask(__name__)
-
-clsfr = driver()
-# load classifier model
-clsfr.load_word_model('models/sen2vec.mdl')
-# load classifier model
-clsfr.load_model('models/model_classifier.mdl')
-clsfr.model._make_predict_function()
-
-
+drv = driver()
 
 @app.route("/")
 def index():
@@ -31,7 +24,7 @@ def classify():
         txt = request.form["inference"]
         print("input          :",txt)
         print("type           :",type(txt))
-        pred = clsfr.predict(txt)
+        pred = drv.predict(txt)
         if pred == '':
             check = False
         elif pred == 0:
@@ -44,5 +37,12 @@ def classify():
     return render_template("classify.html",txt = txt, pred = pred, check = check)
 
 if __name__ == '__main__':
+    # load classifier model
+    drv.load_model(os.path.join('models', 'generated_model_2.mdl'))
+    drv.model._make_predict_function()
+    w2v_path = os.path.join('models', 'glove-twitter-100.txt')
+
+    w2v = WordEmbed() 
+    drv.word_model = w2v.load_vectors(w2v_path, False)
 
     app.run()      

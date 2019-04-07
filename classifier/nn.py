@@ -25,7 +25,7 @@ class BiLSTMv2():
 		model.compile('adam', 'categorical_crossentropy', metrics=['accuracy'])
 		return model
 
-class CSTM():
+class CSTM(): 
 	def create_model(self, vectors, max_words = 20, hidden_units = 150):
 		wv = vectors
 		model = Sequential()
