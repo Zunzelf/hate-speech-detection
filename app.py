@@ -13,7 +13,7 @@ clsfr = driver()
 # load classifier model
 clsfr.load_word_model('models/sen2vec.mdl')
 # load classifier model
-clsfr.load_model('models/beta-3.mdl')
+clsfr.load_model('models/model_classifier.mdl')
 clsfr.model._make_predict_function()
 
 
@@ -29,8 +29,8 @@ def classify():
     check = True
     if request.method == "POST":
         txt = request.form["inference"]
-        print("input: ",txt)
-        print("type: ",type(txt))
+        print("input          :",txt)
+        print("type           :",type(txt))
         pred = clsfr.predict(txt)
         if pred == '':
             check = False
@@ -40,7 +40,7 @@ def classify():
             pred = "ofensif"
         elif pred == 2:
             pred = "netral"
-        print(txt, '--->', pred)
+        print('predicted      :', pred)
     return render_template("classify.html",txt = txt, pred = pred, check = check)
 
 if __name__ == '__main__':

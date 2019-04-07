@@ -1,6 +1,6 @@
 import os, sys
-# stderr = sys.stderr
-# sys.stderr = open(os.devnull, 'w')
+stderr = sys.stderr
+sys.stderr = open(os.devnull, 'w')
 try:
     from utils.feature_extraction import WordEmbed
     from utils.feature_extraction import word2idx, idx2word    
@@ -24,7 +24,7 @@ import numpy as np
 import multiprocessing as mp
 from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split as tts
-# sys.stderr = stderr
+sys.stderr = stderr
 dats = Data()
 
 class driver():
@@ -44,10 +44,11 @@ class driver():
         tesx = inp
         tesx = prepro.clean(tesx)[:20]
         test = WordEmbed().sen2vec_2(tesx, self.word_model)
+        print("preprocessed   :", " ".join(tesx))
         res = self.model.predict_classes(test)
         return res[0]
 
-    def train_model(self, X, Y, X_test = None, Y_test = None, save_path = 'model_classifier.mdl', epochs = 100, model):        
+    def train_model(self, X, Y, X_test = None, Y_test = None, save_path = 'model_classifier.mdl', epochs = 100, model = 'bi'):        
         pretrained_weights = self.word_model.wv.syn0
         datas = X
         targets = Y
