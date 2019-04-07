@@ -8,7 +8,7 @@ def word2idx(word, word_model):
     try :
         return word_model.wv.vocab[word].index
     except KeyError :
-        return word_model.wv.vocab['$$'].index
+        return len(word_model.wv.vocab)
 
 def idx2word(idx, word_model):
     return word_model.wv.index2word[idx]
@@ -77,8 +77,8 @@ class WordEmbed():
         print("load model from file...")
         return pickle.load(open(path, 'rb'))
 
-    def load_vectors(self, path):
-        return gensim.models.KeyedVectors.load_word2vec_format(path, binary=True)
+    def load_vectors(self, path, bin = True):
+        return gensim.models.KeyedVectors.load_word2vec_format(path, binary = bin)
 
 if __name__ == "__main__":
     w2v = WordEmbed()

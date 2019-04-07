@@ -15,6 +15,16 @@ class BiLSTM():
 		model.compile('adam', 'categorical_crossentropy', metrics=['accuracy'])
 		return model
 
+class BiLSTMv2():
+	def create_model(self, wv, max_words = 20):
+		model = Sequential()
+		model.add(Embedding(wv.shape[0], wv.shape[1], input_length = max_words, trainable = False, weights = [wv]))
+		model.add(Bidirectional(LSTM(wv.shape[1])))
+		model.add(Dropout(0.5))
+		model.add(Dense(3, activation='softmax'))
+		model.compile('adam', 'categorical_crossentropy', metrics=['accuracy'])
+		return model
+
 class CSTM():
 	def create_model(self, vectors, max_words = 20, hidden_units = 150):
 		wv = vectors

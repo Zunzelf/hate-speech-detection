@@ -5,7 +5,7 @@ try:
     from utils.feature_extraction import WordEmbed
     from utils.feature_extraction import word2idx, idx2word    
     from utils.dataset import Data, tokenize_doc, tokenize_sen
-    from classifier.nn import BiLSTM
+    from classifier.nn import BiLSTM, BiLSTMv2
     from utils.dataset import Data
     from keras.utils import np_utils
 except ModuleNotFoundError:
@@ -13,7 +13,7 @@ except ModuleNotFoundError:
     from utils.feature_extraction import WordEmbed
     from utils.feature_extraction import word2idx, idx2word    
     from utils.dataset import Data, tokenize_doc, tokenize_sen
-    from classifier.nn import BiLSTM
+    from classifier.nn import BiLSTM, BiLSTMv2
     from utils.dataset import Data
     from keras.utils import np_utils
 
@@ -28,6 +28,10 @@ sys.stderr = stderr
 dats = Data()
 
 class driver():
+    def __init__(self):
+        self.model = None
+        self.word_model = None
+
     def load_model(self, path):
         print("loading model: ")
         with open(path, 'rb') as file:
@@ -48,7 +52,7 @@ class driver():
         res = self.model.predict_classes(test)
         return res[0]
 
-    def train_model(self, X, Y, X_test = None, Y_test = None, save_path = 'model_classifier.mdl', epochs = 100, model = 'bi'):        
+    def train_BiLSTM(self, X, Y, X_test = None, Y_test = None, save_path = 'model_classifier.mdl', epochs = 100):        
         pretrained_weights = self.word_model.wv.syn0
         datas = X
         targets = Y
@@ -82,6 +86,48 @@ class driver():
 
         with open(save_path, 'wb') as file:
             pkl.dump(self.model, file)
+    
+    def train_BiLSTMv2(self, X, Y, X_test = None, Y_test = None, wv_array = None, save_path = 'model_classifier.mdl', epochs = 100):
+        if type(wv_array) != type(None):        
+            
+            datas = X
+            targets = Y
+
+            vocab_size, embedding_size = wv_array.shape
+
+            num_target = len(set(targets))
+            targets = np_utils.to_categorical(targets, num_classes = num_target)
+            test_targets = np_utils.to_categorical(Y_test, num_classes = num_target)
+
+            datas = [x[:20] for x in datas]
+            test_data = [x[:20] for x in X_test]
+            train_x = np.zeros([len(datas), 20], dtype=np.int32)
+            test_x = np.zeros([len(X_test), 20], dtype=np.int32)
+
+            train_y = np.zeros([len(datas), num_target], dtype=np.int32)
+            test_y = np.zeros([len(Y_test), num_target], dtype=np.int32)
+            
+            for i, data in enumerate(datas):
+                for t, word in enumerate(data[:-1]):
+                    train_x[i, t] = word2idx(word, self.word_model)
+
+                for x in range(num_target):
+                    train_y[i, x] = targets[i, x]     
+
+            for i, data in enumerate(test_data):
+                for t, word in enumerate(data[:-1]):
+                    test_x[i, t] = word2idx(word, self.word_model)
+
+                for x in range(num_target):
+                    test_y[i, x] = test_targets[i, x]
+            print('>>>>>>>>>>>>>', vocab_size, embedding_size)
+            self.model = BiLSTMv2().create_model(wv = wv_array, max_words = 20)
+            self.model.fit(train_x, train_y, batch_size = 64, epochs = epochs, verbose=1, validation_data = [test_x, test_y])
+
+            with open(save_path, 'wb') as file:
+                pkl.dump(self.model, file)
+        else :
+            print("insert word vectors first")
     
     def train_word_model(self, sentences, save_path = 'model_word_vector.mdl', ndim = 100, window_size = 10, min_count = 2):
         # the format for input -> [['word-1-sentence-1',..,'word-n-sentence-1'],..,['word-1-sentence-n',..,'word-n-sentence-n']]
@@ -131,7 +177,7 @@ class driver():
         
         train_x, test_x, train_y, test_y = tts(cleaned_data, targets, test_size = test)
         
-        if w2v == None:
+        if w2v == None and self.word_model == None:
             self.train_word_model(cleaned_data, save_path = 'generated_word_model.mdl')
             print('Processed : %i vocabs'% len(self.word_model.wv.vocab))
         elif type(w2v) == str:
@@ -141,8 +187,8 @@ class driver():
             # freed some memory
             del cleaned_data
             del dat
-
-        self.train_model(train_x, train_y, test_x, test_y, save_path = save_path, epochs = epochs, model = model)
+        if model == 'bi':
+            self.train_BiLSTM(train_x, train_y, test_x, test_y, save_path = save_path, epochs = epochs)
         if evaluate:
             self.evaluate(test_x, test_y)
 
@@ -161,21 +207,25 @@ class driver():
 if __name__ == "__main__":
     data_path = os.path.join("..", 'models', 'token-checked-2.bin')
     w2v_path = os.path.join("..", 'models', 'glove-twitter-100.txt')
-    with open(data_path, 'rb') as file:
-        data = pkl.load(file)
-    # w2v = WordEmbed()
-    # model = w2v.load_vectors(w2v_path, False)
-    # # convert the wv word vectors into a numpy matrix that is suitable for insertion
-    # # into our TensorFlow and Keras models
-    # embedding_matrix = np.zeros((len(model.wv.vocab), 100))
-    # for i in tqdm(range(len(model.wv.vocab))):
-    #     embedding_vector = model.wv[model.wv.index2word[i]]
-    #     if embedding_vector is not None:
-    #         embedding_matrix[i] = embedding_vector
-    # print(embedding_matrix)
+
     drv = driver()
-    drv.load_word_model(os.path.join('..', 'models', 'sen2vec.mdl'))
+    # drv.load_word_model(os.path.join('..', 'models', 'sen2vec.mdl'))
     trgt = Data()
     trgt.load_data(os.path.join('..', 'utils', 'labeled_data.csv'))
     trgt = trgt.y
-    drv.generate_models([data, trgt], 'generated_model.mdl', os.path.join('..', 'models', 'sen2vec.mdl'))
+
+    with open(data_path, 'rb') as file:
+        data = pkl.load(file)
+
+    w2v = WordEmbed()
+    model = w2v.load_vectors(w2v_path, False)
+    
+    drv.word_model = model
+    wv_array = model.wv.syn0
+    train_x, test_x, train_y, test_y = tts(data, trgt, test_size = 0.3)
+    drv.train_BiLSTMv2(train_x, train_y, test_x, test_y, wv_array = wv_array, save_path = 'generated_model_2.mdl')
+
+    ## TrainModel
+    # drv.generate_models([data, trgt], 'generated_model_2.mdl', os.path.join('..', 'models', 'sen2vec.mdl'))
+
+    
