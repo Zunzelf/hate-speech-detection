@@ -22,8 +22,9 @@ import pickle as pkl
 from tqdm import tqdm
 import numpy as np
 import multiprocessing as mp
-from sklearn.metrics import f1_score
+from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split as tts
+from _pickle import UnpicklingError
 sys.stderr = stderr
 dats = Data()
 
@@ -44,11 +45,15 @@ class driver():
             self.word_model = pkl.load(file)
         print("model loaded")
 
-    def predict(self, inp):
+    def predict(self, inp, show = True, preprocess = True):
         tesx = inp
-        tesx = prepro.clean(tesx)[:20]
+        if preprocess:
+            tesx = prepro.clean(tesx)[:20]
+        elif not preprocess:
+            tesx = prepro.tweet_prepro(tesx)[:20]
         test = WordEmbed().sen2vec_2(tesx, self.word_model)
-        print("preprocessed   :", " ".join(tesx))
+        if show:
+            print("preprocessed   :", " ".join(tesx))
         res = self.model.predict_classes(test)
         return res[0]
 
@@ -120,7 +125,7 @@ class driver():
 
                 for x in range(num_target):
                     test_y[i, x] = test_targets[i, x]
-            print('>>>>>>>>>>>>>', vocab_size, embedding_size)
+                    
             self.model = BiLSTMv2().create_model(wv = wv_array, max_words = 20)
             self.model.fit(train_x, train_y, batch_size = 64, epochs = epochs, verbose=1, validation_data = [test_x, test_y])
 
@@ -177,11 +182,20 @@ class driver():
         
         train_x, test_x, train_y, test_y = tts(cleaned_data, targets, test_size = test)
         
+        print('Loading word vectors...')
         if w2v == None and self.word_model == None:
             self.train_word_model(cleaned_data, save_path = 'generated_word_model.mdl')
             print('Processed : %i vocabs'% len(self.word_model.wv.vocab))
         elif type(w2v) == str:
-            self.load_word_model(w2v)
+            try:
+                self.load_word_model(w2v)
+            except UnpicklingError:
+                wv = WordEmbed()
+                try :
+                    self.word_model = wv.load_vectors(w2v)
+                except UnicodeDecodeError:
+                    self.word_model = wv.load_vectors(w2v, False)
+                del wv
 
         if type(data) == str:
             # freed some memory
@@ -189,20 +203,23 @@ class driver():
             del dat
         if model == 'bi':
             self.train_BiLSTM(train_x, train_y, test_x, test_y, save_path = save_path, epochs = epochs)
+        elif model == 'bw':
+            self.train_BiLSTMv2(train_x, train_y, test_x, test_y, wv_array = self.word_model.wv.syn0, epochs = epochs)
         if evaluate:
-            self.evaluate(test_x, test_y)
+            self.evaluate(test_x, test_y, preprocess = False)
 
-    def evaluate(self, test_x, test_y):
+    def evaluate(self, test_x, test_y, preprocess = True):
             preds = []
             orig = []
             txts = []
             for x in tqdm(range(len(test_x))):
                 txts = " ".join(test_x[x])
-                preds.append(self.predict(txts))
+                preds.append(self.predict(txts, False, preprocess))
                 # just for checking accuracy
-                orig.append(test_y[x])       
-            score = f1_score(orig, preds, average = 'micro')   
-            print(score)
+                orig.append(test_y[x])
+            print(confusion_matrix(orig, preds))
+            print('=================================================')
+            print(classification_report(orig, preds, target_names=['hate', 'offensive', 'neutral']))
         
 if __name__ == "__main__":
     data_path = os.path.join("..", 'models', 'token-checked-2.bin')
@@ -217,15 +234,15 @@ if __name__ == "__main__":
     with open(data_path, 'rb') as file:
         data = pkl.load(file)
 
-    w2v = WordEmbed()
-    model = w2v.load_vectors(w2v_path, False)
+    # w2v = WordEmbed()
+    # model = w2v.load_vectors(w2v_path, False)
     
-    drv.word_model = model
-    wv_array = model.wv.syn0
-    train_x, test_x, train_y, test_y = tts(data, trgt, test_size = 0.3)
-    drv.train_BiLSTMv2(train_x, train_y, test_x, test_y, wv_array = wv_array, save_path = 'generated_model_2.mdl')
+    # drv.word_model = model
+    # wv_array = model.wv.syn0
+    # train_x, test_x, train_y, test_y = tts(data, trgt, test_size = 0.3)
+    # drv.train_BiLSTMv2(train_x, train_y, test_x, test_y, wv_array = wv_array, save_path = 'generated_model_2.mdl')
 
     ## TrainModel
-    # drv.generate_models([data, trgt], 'generated_model_2.mdl', os.path.join('..', 'models', 'sen2vec.mdl'))
+    drv.generate_models([data, trgt], 'generated_model_3.mdl', w2v_path, model = 'bw', epochs = 100)
 
     
