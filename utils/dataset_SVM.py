@@ -51,6 +51,20 @@ class Support_Vector:
         self.vectorized = pickle.load(open('Model/'+self.filenameVector, 'rb'))
         self.tf_idf = pickle.load(open('Model/'+self.filenameTFIDF, 'rb'))
     
+    def test(self,data):
+        self.data = data
+        X_test = self.vectorized.transform(data.X_test)
+        X_test_tfidf = self.tf_idf.transform(X_test)
+        self.y_pred = self.classifier.predict(X_test_tfidf) 
+        self.acc = accuracy_score(data.y_test, self.y_pred)
+        print("SVM accuration : ",self.acc)
+        self.cm = confusion_matrix(data.y_test, self.y_pred)
+        print("Confusion Matrix : ")
+        print(self.cm)
+        self.cr = classification_report(data.y_test, self.y_pred)
+        print("Classification Report : ")
+        print(self.cr)
+
     def train(self,data):
         self.data = data
 
@@ -69,12 +83,7 @@ class Support_Vector:
         pickle.dump(self.vectorized, open('Model/'+self.filenameVector, 'wb'))
         pickle.dump(self.tf_idf, open('Model/'+self.filenameTFIDF, 'wb'))
 
-        # testing
-        X_test = self.vectorized.transform(self.data.X_test)
-        X_test_tfidf = self.tf_idf.transform(X_test)
-        self.y_pred = self.classifier.predict(X_test_tfidf) 
-        self.acc = accuracy_score(self.data.y_test, self.y_pred)
-        print("SVM accuration : ",self.acc)  
+        self.test(data)
 
     def classify(self,docs):
         vectorized_docs = self.vectorized.transform([docs])
@@ -162,7 +171,7 @@ if __name__ == "__main__":
         os.makedirs('./Model/')
 
     if (os.path.exists('./Model/'+sv.filenameModel)):
-        sv.load_data()
+        sv.load_data() # load model
         words = input("Insert sentence to classify : ")
         token = tokenize_sen(words)
         checked = ' '.join(preprocess.spell_check(token))
@@ -181,9 +190,12 @@ if __name__ == "__main__":
         print("tokenize docs...complete!")
 
         print("spell checking tokens...")
+        pool = mp.Pool(int(mp.cpu_count()))    
+        res = list(tqdm(pool.imap(preprocess.spell_check, token), total = len(token)))
         spellChecked = []
-        for w in token:
-            spellChecked.append(' '.join(preprocess.spell_check(w)))
+        for sent in res:
+            spellChecked.append(' '.join(sent))
+        pool.close
         print("spell checking tokens...complete!")
 
         tweets = spellChecked
@@ -195,5 +207,3 @@ if __name__ == "__main__":
             
         # classify (cl stand for classifier)
         sv.train(data)
-    
-  
